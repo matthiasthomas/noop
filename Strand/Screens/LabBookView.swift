@@ -257,7 +257,7 @@ struct LabBookView: View {
                     return
                 }
                 let rows = result.rows.map { r -> LabMarkerRow in
-                    // Local noon of the row's literal day: deterministic, so re-importing
+                    // UTC noon of the row's literal day: deterministic, so re-importing
                     // the same file updates in place (natural key
                     // deviceId+markerKey+takenAt+source) instead of duplicating.
                     let epoch = LabBookFormat.noonEpoch(r.day)
@@ -378,7 +378,7 @@ struct LabBookView: View {
                             .font(StrandFont.headline)
                             .foregroundStyle(StrandPalette.textPrimary)
                             .lineLimit(1)
-                        Text(lastTakenCaption(latest))
+                        Text(LabBookFormat.lastTakenCaption(latest))
                             .font(StrandFont.footnote)
                             .foregroundStyle(StrandPalette.textTertiary)
                     }
@@ -444,11 +444,6 @@ struct LabBookView: View {
         guard let row else { return "—" }
         if let v = row.value { return "\(LabBookFormat.value(v, key: key)) \(row.unit)" }
         return row.valueText ?? "—"
-    }
-
-    private func lastTakenCaption(_ row: LabMarkerRow?) -> String {
-        guard let row else { return String(localized: "no readings yet") }
-        return String(localized: "last taken \(LabBookFormat.day(row.takenAt))")
     }
 
     private var detailBinding: Binding<MarkerKeyID?> {
@@ -531,22 +526,18 @@ enum LabBookFormat {
         return s == "-0" ? "0" : s
     }
 
-    private static let dayFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "d MMM yyyy"
-        return f
-    }()
-
-    /// "12 Jun 2026" for a takenAt epoch-seconds value.
-    static func day(_ epoch: Int) -> String {
-        dayFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(epoch)))
+    /// From the stored day key, as the history list renders it. `takenAt` is UTC noon for a CSV import,
+    /// which a device-zone render names as the next day from UTC+12 onwards. Twin of the Kotlin
+    /// `lastTakenCaption`.
+    static func lastTakenCaption(_ row: LabMarkerRow?) -> String {
+        guard let row else { return String(localized: "no readings yet") }
+        return String(localized: "last taken \(dayFromKey(row.day))")
     }
 
     /// "12 Jun 2026" rendered from a stored `yyyy-MM-dd` day string, LOCATION-INDEPENDENTLY: the day key
-    /// is parsed in UTC and reformatted in UTC, so the history date never shifts with the device zone the
-    /// way `day(takenAt)` (a local render of a stored instant) can near midnight. Falls back to the raw
-    /// string if it doesn't parse.
+    /// is parsed in UTC and reformatted in UTC, so the date never shifts with the device zone the way a
+    /// local render of the stored `takenAt` instant can (a CSV import's UTC noon is the next day from
+    /// UTC+12). Falls back to the raw string if it doesn't parse.
     static func dayFromKey(_ day: String) -> String {
         guard let date = utcKeyFormatter.date(from: day) else { return day }
         return utcDayFormatter.string(from: date)
