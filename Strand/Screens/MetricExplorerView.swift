@@ -424,10 +424,12 @@ func vitalReadingRows(readings: [VitalReading], unit: String, strapDeviceId: Str
 
 /// Include the weekday so recovery readings can be matched to training days. UTC-fixed and localized;
 /// Today/Yesterday remain visible beside the date. Swift twin of Android's `vitalReadingDateLabel`.
+///
+/// Today and yesterday are the DEVICE's calendar dates, as Android's `LocalDate.now()` is. `now` is an
+/// instant, and its UTC date is already tomorrow on an evening west of UTC and still yesterday on a
+/// morning east of it, so comparing on a UTC calendar called tonight's reading "Yesterday".
 func vitalReadingDateLabel(_ day: String, now: Date = Date(), locale: Locale = AppLanguage.activeLocale) -> String {
     guard let date = parseDay(day) else { return day }
-    var cal = Calendar(identifier: .gregorian)
-    cal.timeZone = TimeZone(identifier: "UTC")!
     let formatter = DateFormatter()
     formatter.locale = locale
     formatter.timeZone = TimeZone(identifier: "UTC")
@@ -435,9 +437,10 @@ func vitalReadingDateLabel(_ day: String, now: Date = Date(), locale: Locale = A
     let dated = formatter.string(from: date)
     formatter.dateFormat = "EEE"
     let weekday = formatter.string(from: date)
-    if cal.isDate(date, inSameDayAs: now) { return "\(String(localized: "Today")) · \(weekday)" }
-    if let yesterday = cal.date(byAdding: .day, value: -1, to: now),
-       cal.isDate(date, inSameDayAs: yesterday) { return "\(String(localized: "Yesterday")) · \(weekday)" }
+    let key = strandDayParser.string(from: date)
+    if key == Repository.localDayKey(now) { return "\(String(localized: "Today")) · \(weekday)" }
+    if let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: now),
+       key == Repository.localDayKey(yesterday) { return "\(String(localized: "Yesterday")) · \(weekday)" }
     return dated
 }
 
