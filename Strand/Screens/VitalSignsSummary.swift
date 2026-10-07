@@ -491,9 +491,12 @@ enum BodyVitalSigns {
         return f
     }()
 
+    /// UTC, like `dayParser`: the key parses to UTC midnight, so a local-zone formatter west of UTC
+    /// renders the day before ("2026-08-25" read "24 Aug" in New York).
     static let dayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
         f.dateFormat = "d MMM"
         return f
     }()

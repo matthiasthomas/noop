@@ -178,9 +178,12 @@ struct SleepModel {
         return f
     }()
 
+    /// UTC, like `dayKeyParser`: the key parses to UTC midnight, so a local-zone formatter west of UTC
+    /// renders the day before ("2026-08-11" read "Aug 10" in New York).
     private static let shortDayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = AppLanguage.activeLocale
+        f.timeZone = TimeZone(identifier: "UTC")
         f.setLocalizedDateFormatFromTemplate("dMMM")
         return f
     }()
