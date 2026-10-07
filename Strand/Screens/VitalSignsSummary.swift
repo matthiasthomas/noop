@@ -110,7 +110,7 @@ struct BodyVitalReading: Identifiable {
 
     static func dayLabel(_ day: String) -> String {
         if day == BodyVitalSigns.logicalDayKey(Date()) { return String(localized: "Today") }
-        guard let date = BodyVitalSigns.dayParser.date(from: day) else { return day }
+        guard let date = DayKey.date(day) else { return day }
         return BodyVitalSigns.dayFormatter.string(from: date)
     }
 }
@@ -483,23 +483,7 @@ enum BodyVitalSigns {
         return f
     }()
 
-    static let dayParser: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.timeZone = TimeZone(identifier: "UTC")
-        f.dateFormat = "yyyy-MM-dd"
-        return f
-    }()
-
-    /// UTC, like `dayParser`: the key parses to UTC midnight, so a local-zone formatter west of UTC
-    /// renders the day before ("2026-08-25" read "24 Aug" in New York).
-    static let dayFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.timeZone = TimeZone(identifier: "UTC")
-        f.dateFormat = "d MMM"
-        return f
-    }()
+    static let dayFormatter = DayKey.formatter("d MMM")
 }
 
 private struct VitalPoint: Equatable {

@@ -13,14 +13,11 @@ final class LabBookFormatTests: XCTestCase {
     /// A CSV import's `takenAt` is UTC noon, which is the next day from UTC+12. The caption names the stored
     /// day in every zone, as the history list does. Pins the process zone so a UTC runner catches it too.
     func testLastTakenNamesTheStoredDayInEveryZone() {
-        let saved = NSTimeZone.default
-        defer { NSTimeZone.default = saved }
         let row = LabMarkerRow(id: "ldl-1", deviceId: "d", markerKey: "ldl", category: "blood_panel",
                                day: "2026-08-25", takenAt: LabBookFormat.noonEpoch("2026-08-25"),
                                value: 3.1, valueText: nil, unit: "mmol/L", source: "csv", note: nil,
                                referenceText: nil)
-        for zone in ["Pacific/Honolulu", "UTC", "Pacific/Auckland", "Pacific/Kiritimati"] {
-            NSTimeZone.default = TimeZone(identifier: zone)!
+        inEachTimeZone(["Pacific/Honolulu", "UTC", "Pacific/Auckland", "Pacific/Kiritimati"]) { zone in
             let caption = LabBookFormat.lastTakenCaption(row)
             XCTAssertTrue(caption.hasSuffix("25 Aug 2026"), "\(zone): \(caption)")
         }

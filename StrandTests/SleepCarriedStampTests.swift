@@ -49,10 +49,7 @@ final class SleepCarriedStampTests: XCTestCase {
     /// ("Aug 10"): the key parsed as UTC midnight and was formatted in local time. Pins the process zone
     /// so a UTC runner catches it too.
     func testTheStampReadsTheSameDayInEveryTimeZone() {
-        let saved = NSTimeZone.default
-        defer { NSTimeZone.default = saved }
-        for zone in ["Pacific/Honolulu", "America/New_York", "UTC", "Asia/Tokyo", "Pacific/Kiritimati"] {
-            NSTimeZone.default = TimeZone(identifier: zone)!
+        inEachTimeZone { zone in
             let label = SleepModel.shortDayLabel("2026-08-11")
             XCTAssertTrue(label.contains("11") && !label.contains("10"), "\(zone): \(label)")
         }

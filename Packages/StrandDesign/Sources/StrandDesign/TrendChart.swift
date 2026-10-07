@@ -170,8 +170,8 @@ public struct TrendChart: View {
     /// Optional elapsed time window for a workout trace, with workout-relative tick labels.
     public var workoutTimeAxis: ClosedRange<Date>?
     /// The calendar the x-axis days and the default tooltip date are resolved in. Real timestamps keep
-    /// `.current`; a series of day keys parsed at UTC midnight passes `ChartAxisDays.dayKeyCalendar`,
-    /// or every mark and tooltip names the day before west of UTC.
+    /// `.current`; a series of day keys parsed at UTC midnight passes `DayKey.calendar`, or every mark
+    /// and tooltip names the day before west of UTC.
     public var calendar: Calendar
 
     /// Mean of all point values, computed once in `init` so the area fill's gradient
@@ -255,28 +255,15 @@ public struct TrendChart: View {
     /// accessibility stay on the full-resolution `points` so those readouts are unchanged.
     private let displayPoints: [TrendPoint]
 
-    private static let sharedDateFormatter: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "EEE d MMM"; return f
-    }()
-
-    private static let dayKeyDateFormatter: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "EEE d MMM"
-        f.timeZone = ChartAxisDays.dayKeyCalendar.timeZone
-        return f
-    }()
-
     /// Default tooltip date format ("EEE d MMM") in the device zone, for real timestamps.
     public static func defaultDateString(_ date: Date) -> String {
-        sharedDateFormatter.string(from: date)
+        defaultDateString(date, timeZone: .current)
     }
 
     /// `defaultDateString` in `timeZone`. A day key parsed at UTC midnight passes
-    /// `ChartAxisDays.dayKeyCalendar.timeZone`, or it reads as the day before west of UTC.
+    /// `DayKey.calendar.timeZone`, or it reads as the day before west of UTC.
     public static func defaultDateString(_ date: Date, timeZone: TimeZone) -> String {
-        if timeZone == dayKeyDateFormatter.timeZone { return dayKeyDateFormatter.string(from: date) }
-        if timeZone == TimeZone.current { return sharedDateFormatter.string(from: date) }
-        let f = DateFormatter(); f.dateFormat = "EEE d MMM"; f.timeZone = timeZone
-        return f.string(from: date)
+        DayZone.for(timeZone).day.string(from: date)
     }
 
     private static func axisNumberLabel(_ value: Double) -> String {

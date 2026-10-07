@@ -37,10 +37,7 @@ final class SkinTempAbsoluteDisplayTests: XCTestCase {
     /// it read the day before ("24 Aug"): the key parsed as UTC midnight and was formatted in local time.
     /// Pins the process zone so a UTC runner catches it too.
     func testTheDayReadsTheSameInEveryTimeZone() {
-        let saved = NSTimeZone.default
-        defer { NSTimeZone.default = saved }
-        for zone in ["Pacific/Honolulu", "America/New_York", "UTC", "Asia/Tokyo", "Pacific/Kiritimati"] {
-            NSTimeZone.default = TimeZone(identifier: zone)!
+        inEachTimeZone { zone in
             XCTAssertEqual(BodyVitalReading.dayLabel("2026-08-25"), "25 Aug", zone)
         }
     }

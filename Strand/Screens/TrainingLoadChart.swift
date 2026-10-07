@@ -49,14 +49,7 @@ struct TrainingLoadChart: View {
 
     private func fmt(_ v: Double) -> String { String(format: "%.1f", v) }
 
-    // UTC, like `TrainingLoadCard.dayParser`: a row's date is its day key at UTC midnight, which is the
-    // evening before in a zone west of UTC.
-    private static let tooltipDateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.timeZone = TimeZone(identifier: "UTC")
-        f.dateFormat = "d MMM yyyy"
-        return f
-    }()
+    private static let tooltipDateFormatter = DayKey.formatter("d MMM yyyy", locale: .current)
 
     var body: some View {
         // Floor at 1 (matching the Android `fold(1.0)` twin): an all-rest window of zero loads would

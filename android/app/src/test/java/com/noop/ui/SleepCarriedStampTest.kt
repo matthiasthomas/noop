@@ -5,8 +5,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import com.noop.inEachTimeZone
 import org.junit.Test
-import java.util.TimeZone
 
 /** #1946: a carried prior-night metric value must be stamped with its day so it is not passed off
  *  as tonight's read. The [Metric] data class now carries `latestDay` alongside `latest`, and
@@ -76,15 +76,9 @@ class SleepCarriedStampTest {
      *  default zone so a UTC runner catches it too. Twin of the Swift
      *  `testTheStampReadsTheSameDayInEveryTimeZone`. */
     @Test fun stampReadsTheSameDayInEveryTimeZone() {
-        val saved = TimeZone.getDefault()
-        try {
-            for (zone in listOf("Pacific/Honolulu", "America/New_York", "UTC", "Asia/Tokyo", "Pacific/Kiritimati")) {
-                TimeZone.setDefault(TimeZone.getTimeZone(zone))
-                val label = Metric.shortDayLabel("2026-08-11")
-                assertTrue("$zone: $label", label.contains("11") && !label.contains("10"))
-            }
-        } finally {
-            TimeZone.setDefault(saved)
+        inEachTimeZone { zone ->
+            val label = Metric.shortDayLabel("2026-08-11")
+            assertTrue("$zone: $label", label.contains("11") && !label.contains("10"))
         }
     }
 
