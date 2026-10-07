@@ -19,24 +19,11 @@ import WhoopStore
 // distinct); only when it holds ZERO points do we auto-expand to the smallest larger
 // range that does. The hero always shows the latest available point + "as of <date>".
 
-// yyyy-MM-dd → Date, fixed UTC / en_US_POSIX (per task spec).
-private let strandDayParser: DateFormatter = {
-    let f = DateFormatter()
-    f.locale = Locale(identifier: "en_US_POSIX")
-    f.timeZone = TimeZone(identifier: "UTC")
-    f.dateFormat = "yyyy-MM-dd"
-    return f
-}()
-
-private func parseDay(_ day: String) -> Date? { strandDayParser.date(from: day) }
+private func parseDay(_ day: String) -> Date? { DayKey.date(day) }
 
 /// Localized long date for the hero "as of" line, with a fixed calendar-day time zone.
 private func longDate(_ d: Date) -> String {
-    let f = DateFormatter()
-    f.locale = AppLanguage.activeLocale
-    f.timeZone = TimeZone(identifier: "UTC")
-    f.dateFormat = "d MMM yyyy"
-    return f.string(from: d)
+    DayKey.formatter("d MMM yyyy", locale: AppLanguage.activeLocale).string(from: d)
 }
 
 /// The category accent (colour communicates category only — never decoration).
@@ -254,11 +241,7 @@ enum MetricDetailSteps {
         case .weekly:
             return String(localized: "week of \(longDate(date))")
         case .monthly:
-            let formatter = DateFormatter()
-            formatter.locale = AppLanguage.activeLocale
-            formatter.timeZone = TimeZone(identifier: "UTC")
-            formatter.dateFormat = "MMMM yyyy"
-            return formatter.string(from: date)
+            return DayKey.formatter("MMMM yyyy", locale: AppLanguage.activeLocale).string(from: date)
         }
     }
 
@@ -430,14 +413,11 @@ func vitalReadingRows(readings: [VitalReading], unit: String, strapDeviceId: Str
 /// morning east of it, so comparing on a UTC calendar called tonight's reading "Yesterday".
 func vitalReadingDateLabel(_ day: String, now: Date = Date(), locale: Locale = AppLanguage.activeLocale) -> String {
     guard let date = parseDay(day) else { return day }
-    let formatter = DateFormatter()
-    formatter.locale = locale
-    formatter.timeZone = TimeZone(identifier: "UTC")
-    formatter.dateFormat = "EEE d MMM"
+    let formatter = DayKey.formatter("EEE d MMM", locale: locale)
     let dated = formatter.string(from: date)
     formatter.dateFormat = "EEE"
     let weekday = formatter.string(from: date)
-    let key = strandDayParser.string(from: date)
+    let key = DayKey.key(date)
     if key == Repository.localDayKey(now) { return "\(String(localized: "Today")) · \(weekday)" }
     if let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: now),
        key == Repository.localDayKey(yesterday) { return "\(String(localized: "Yesterday")) · \(weekday)" }
@@ -1515,14 +1495,14 @@ struct MetricDetailView: View {
                 dateFormat: { date in
                     isStepsDetail
                         ? MetricDetailSteps.periodLabel(
-                            day: strandDayParser.string(from: date), resolution: stepsResolution)
-                        : TrendChart.defaultDateString(date, timeZone: ChartAxisDays.dayKeyCalendar.timeZone)
+                            day: DayKey.key(date), resolution: stepsResolution)
+                        : TrendChart.defaultDateString(date, timeZone: DayKey.calendar.timeZone)
                 },
                 accessibilityLabel: stepsAccessibility,
                 yAxisStep: isStepsDetail ? 5000 : nil,
                 showsBarValues: isStepsDetail && (effectiveRange == .week || effectiveRange == .twoWeeks),
                 largeSelection: isStepsDetail,
-                calendar: ChartAxisDays.dayKeyCalendar
+                calendar: DayKey.calendar
             )
         } footer: {
             // #1662: the VO₂max line is SPLIT on purpose wherever the estimator changes, so two

@@ -45,9 +45,9 @@ public struct YearHeatStrip: View {
     /// The calendar, cells and labels in the zone the days are dated in.
     private let zone: DayZone
 
-    /// `calendar` names the zone the dates are in: day keys parsed at UTC midnight pass
-    /// `ChartAxisDays.dayKeyCalendar`, or every cell lands on the weekday before west of UTC. Only its
-    /// time zone is read; the grid itself is always Gregorian and Monday-first.
+    /// `calendar` names the zone the dates are in: day keys parsed at UTC midnight pass `DayKey.calendar`,
+    /// or every cell lands on the weekday before west of UTC. Only its time zone is read; the grid itself
+    /// is always Gregorian and Monday-first.
     public init(
         days: [RecoveryDay],
         cellSize: CGFloat = 12,
@@ -290,33 +290,6 @@ public struct YearHeatStrip: View {
                 .fill(Color.clear)
                 .frame(width: cellSize, height: cellSize)
         }
-    }
-}
-
-/// A Monday-first Gregorian calendar and the strip's two formatters, all in one zone. Cached per zone:
-/// `buildWeeks()` reads `.component` for up to 365 days, so a Calendar allocated per access cost ~730
-/// allocations per render, and a DateFormatter is expensive to create.
-struct DayZone {
-    let calendar: Calendar
-    let month: DateFormatter
-    let day: DateFormatter
-
-    private init(_ timeZone: TimeZone) {
-        var c = Calendar(identifier: .gregorian)
-        c.firstWeekday = 2 // Monday-first columns read nicely
-        c.timeZone = timeZone
-        calendar = c
-        month = DateFormatter(); month.dateFormat = "MMM"; month.timeZone = timeZone
-        day = DateFormatter(); day.dateFormat = "EEE d MMM"; day.timeZone = timeZone
-    }
-
-    private static let dayKeys = DayZone(ChartAxisDays.dayKeyCalendar.timeZone)
-    private static let device = DayZone(.current)
-
-    static func `for`(_ timeZone: TimeZone) -> DayZone {
-        if timeZone == dayKeys.calendar.timeZone { return dayKeys }
-        if timeZone == device.calendar.timeZone { return device }
-        return DayZone(timeZone)
     }
 }
 

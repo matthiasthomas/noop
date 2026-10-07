@@ -3,6 +3,8 @@ package com.noop.ingest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import com.noop.inEachTimeZone
+import com.noop.inTimeZone
 import org.junit.Test
 import java.time.ZoneId
 
@@ -205,29 +207,18 @@ class LiftingImporterTest {
             Early,2026-08-25 07:00:00,2026-08-25 08:00:00,Squat,0,normal,100,5
             Late,2026-08-25 20:30:00,2026-08-25 21:30:00,Squat,0,normal,100,5
         """.trimIndent().toByteArray()
-        for (zone in listOf("Pacific/Honolulu", "America/New_York", "UTC", "Australia/Sydney", "Pacific/Kiritimati")) {
-            val r = inZone(zone) { LiftingImporter.parse(csv, ZoneId.of(zone)) }
+        inEachTimeZone(listOf("Pacific/Honolulu", "America/New_York", "UTC", "Australia/Sydney", "Pacific/Kiritimati")) { zone ->
+            val r = LiftingImporter.parse(csv, ZoneId.of(zone))
             assertEquals(zone, 2, r.sessions.size)
             assertEquals(zone, "2026-08-25", r.firstDay)
             assertEquals(zone, "2026-08-25", r.lastDay)
         }
-        val liftosaur = inZone("America/New_York") {
+        val liftosaur = inTimeZone("America/New_York") {
             LiftingImporter.parseLiftosaur(
                 """[ { "startTime": 1787704200000, "entries": [ { "sets": [ { "weight": 50, "completedReps": 10 } ] } ] } ]""",
             )
         }
         assertEquals("2026-08-25", liftosaur.firstDay) // 2026-08-26T00:30Z, 20:30 the evening before in New York
-    }
-
-    /** Runs [body] with the JVM default zone (the device zone the day span is named in) set to [zone]. */
-    private fun <T> inZone(zone: String, body: () -> T): T {
-        val saved = java.util.TimeZone.getDefault()
-        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(zone))
-        try {
-            return body()
-        } finally {
-            java.util.TimeZone.setDefault(saved)
-        }
     }
 
     @Test
@@ -254,7 +245,7 @@ class LiftingImporterTest {
             ] }
             """.trimIndent()
 
-        val r = inZone("UTC") { LiftingImporter.parse(json.toByteArray()) }
+        val r = inTimeZone("UTC") { LiftingImporter.parse(json.toByteArray()) }
 
         assertEquals(listOf(1748772000L), r.sessions.map { it.startTs })
         assertEquals(1, r.sessions.size)

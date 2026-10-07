@@ -1,9 +1,9 @@
 package com.noop.ui
 
 import com.noop.data.LabMarkerRow
+import com.noop.inEachTimeZone
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.util.TimeZone
 
 /**
  * A CSV import's `takenAt` is UTC noon, which is the next day from UTC+12. The Lab Book "last taken"
@@ -19,14 +19,8 @@ class LabLastTakenCaptionTest {
     )
 
     @Test fun namesTheStoredDayInEveryZone() {
-        val saved = TimeZone.getDefault()
-        try {
-            for (zone in listOf("Pacific/Honolulu", "UTC", "Pacific/Auckland", "Pacific/Kiritimati")) {
-                TimeZone.setDefault(TimeZone.getTimeZone(zone))
-                assertEquals(zone, "last taken 25 Aug 2026", lastTakenCaption(row))
-            }
-        } finally {
-            TimeZone.setDefault(saved)
+        inEachTimeZone(listOf("Pacific/Honolulu", "UTC", "Pacific/Auckland", "Pacific/Kiritimati")) { zone ->
+            assertEquals(zone, "last taken 25 Aug 2026", lastTakenCaption(row))
         }
     }
 

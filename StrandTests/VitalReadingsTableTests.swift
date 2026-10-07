@@ -57,17 +57,14 @@ final class VitalReadingsTableTests: XCTestCase {
     /// dates called tonight's reading "Yesterday" and last night's "Today". Pins the process zone so a
     /// UTC runner catches it too.
     func testTodayAndYesterdayFollowTheDeviceDateInEveryZone() {
-        let saved = NSTimeZone.default
-        defer { NSTimeZone.default = saved }
         let english = Locale(identifier: "en_US")
-        let evenings = [("Pacific/Honolulu", 21), ("America/New_York", 22), ("UTC", 12),
-                        ("Asia/Tokyo", 7), ("Pacific/Kiritimati", 6)]
-        for (zone, hour) in evenings {
-            let tz = TimeZone(identifier: zone)!
-            NSTimeZone.default = tz
+        // A local hour whose UTC date differs from the local one: evenings to the west, mornings to the east.
+        let localHour = ["Pacific/Honolulu": 21, "America/New_York": 22, "UTC": 12,
+                         "Asia/Tokyo": 7, "Pacific/Kiritimati": 6]
+        inEachTimeZone { zone in
             var cal = Calendar(identifier: .gregorian)
-            cal.timeZone = tz
-            let now = cal.date(from: DateComponents(year: 2026, month: 9, day: 30, hour: hour))!
+            cal.timeZone = TimeZone(identifier: zone)!
+            let now = cal.date(from: DateComponents(year: 2026, month: 9, day: 30, hour: localHour[zone]!))!
             XCTAssertEqual(vitalReadingDateLabel("2026-09-30", now: now, locale: english), "Today · Wed", zone)
             XCTAssertEqual(vitalReadingDateLabel("2026-09-29", now: now, locale: english), "Yesterday · Tue", zone)
             XCTAssertEqual(vitalReadingDateLabel("2026-10-01", now: now, locale: english), "Thu 1 Oct", zone)

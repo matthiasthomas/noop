@@ -539,18 +539,12 @@ enum LabBookFormat {
     /// local render of the stored `takenAt` instant can (a CSV import's UTC noon is the next day from
     /// UTC+12). Falls back to the raw string if it doesn't parse.
     static func dayFromKey(_ day: String) -> String {
-        guard let date = utcKeyFormatter.date(from: day) else { return day }
+        guard let date = DayKey.date(day) else { return day }
         return utcDayFormatter.string(from: date)
     }
 
-    /// "d MMM yyyy" pinned to UTC, paired with `utcKeyFormatter` so `dayFromKey` round-trips a UTC day.
-    private static let utcDayFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.timeZone = TimeZone(identifier: "UTC")
-        f.dateFormat = "d MMM yyyy"
-        return f
-    }()
+    /// "d MMM yyyy" in UTC, the zone `DayKey.date` parses in, so `dayFromKey` round-trips a UTC day.
+    private static let utcDayFormatter = DayKey.formatter("d MMM yyyy")
 
     /// The `yyyy-MM-dd` day key the projection uses (LOCAL day of the reading).
     private static let keyFormatter: DateFormatter = {
@@ -561,25 +555,15 @@ enum LabBookFormat {
     }()
     static func dayKey(_ date: Date) -> String { keyFormatter.string(from: date) }
 
-    /// A `yyyy-MM-dd` parser PINNED to UTC, so a day string always maps to the same instant regardless
-    /// of the device zone. The local-zone `keyFormatter` above returns nil for a day whose LOCAL midnight
-    /// is skipped by a DST transition (e.g. Chile/Cuba, 06 Sep) - which used to collapse `noonEpoch` to
-    /// epoch 0 and collide different days on the natural key. UTC never skips midnight.
-    private static let utcKeyFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.timeZone = TimeZone(identifier: "UTC")
-        f.dateFormat = "yyyy-MM-dd"
-        return f
-    }()
-
     /// Epoch seconds of UTC noon on a `yyyy-MM-dd` day — the deterministic, LOCATION-INDEPENDENT `takenAt`
     /// for CSV-imported readings, so re-importing the same file (even after travel to another zone) upserts
     /// in place instead of minting a duplicate (natural key deviceId+markerKey+takenAt+source). Pinned to
-    /// UTC so a DST-skipped local midnight can never collapse the key to epoch 0. 0 only for a genuinely
-    /// unparseable day string. History dates render from the stored `day` string, not this takenAt.
+    /// UTC so a DST-skipped local midnight can never collapse the key to epoch 0: the local-zone
+    /// `keyFormatter` above returns nil for such a day (e.g. Chile/Cuba, 06 Sep), which once collided
+    /// different days on the natural key. 0 only for a genuinely unparseable day string. History dates
+    /// render from the stored `day` string, not this takenAt.
     static func noonEpoch(_ day: String) -> Int {
-        guard let midnight = utcKeyFormatter.date(from: day) else { return 0 }
+        guard let midnight = DayKey.date(day) else { return 0 }
         return Int(midnight.timeIntervalSince1970) + 12 * 3600
     }
 }
