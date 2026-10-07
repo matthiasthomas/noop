@@ -62,11 +62,14 @@ struct XiaomiBandView: View {
         f.dateFormat = "yyyy-MM-dd"
         return f
     }()
+    // UTC, like `dayParser`: a day key is UTC midnight, the evening before in a zone west of UTC.
     private static let spanFormatter: DateFormatter = {
-        let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "d MMM yyyy"; return f
+        let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "d MMM yyyy"
+        f.timeZone = TimeZone(identifier: "UTC"); return f
     }()
     private static let asOfFormatter: DateFormatter = {
-        let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "d MMM"; return f
+        let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "d MMM"
+        f.timeZone = TimeZone(identifier: "UTC"); return f
     }()
     private static let groupedIntFmt: NumberFormatter = {
         let f = NumberFormatter(); f.numberStyle = .decimal; f.maximumFractionDigits = 0; return f
@@ -416,7 +419,8 @@ struct XiaomiBandView: View {
                 if pts.count >= 2 {
                     TrendChart(points: pts, gradient: gradient,
                                valueRange: valueRange(pts, fallback: fallback),
-                               showsArea: true, height: NoopMetrics.chartHeight, valueFormat: fmt)
+                               showsArea: true, height: NoopMetrics.chartHeight, valueFormat: fmt,
+                               calendar: ChartAxisDays.dayKeyCalendar)
                 } else if let only = vals.last {
                     singlePoint(only, fmt: fmt, accent: StrandPalette.sample(stops: gradient.stops, at: 0.85))
                 } else {

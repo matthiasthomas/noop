@@ -112,9 +112,11 @@ struct AppleHealthView: View {
         return f
     }()
 
+    // UTC, like `dayParser`: a day key is UTC midnight, the evening before in a zone west of UTC.
     private static let spanFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
         f.dateFormat = "d MMM yyyy"
         return f
     }()
@@ -122,6 +124,7 @@ struct AppleHealthView: View {
     private static let asOfFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
         f.dateFormat = "d MMM"
         return f
     }()
@@ -657,7 +660,8 @@ struct AppleHealthView: View {
                         valueRange: valueRange(pts, fallback: fallback),
                         showsArea: true,
                         height: NoopMetrics.chartHeight,
-                        valueFormat: fmt
+                        valueFormat: fmt,
+                        calendar: ChartAxisDays.dayKeyCalendar
                     )
                 } else if let only = vals.last {
                     // A single point is not a line — present the lone reading,

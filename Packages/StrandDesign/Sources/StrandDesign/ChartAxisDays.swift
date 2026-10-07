@@ -6,6 +6,18 @@ import Foundation
 /// traces in `OverviewHRChart` and the Health detail) want time marks instead and do not use this.
 public enum ChartAxisDays {
 
+    /// The calendar for dates that are "yyyy-MM-dd" day keys parsed at UTC midnight.
+    ///
+    /// That is the app's day-key convention, because a UTC parse never fails where a device-zone parse
+    /// returns nil on a day whose midnight DST skips (Santiago, Havana, Beirut). Such a date must be
+    /// marked and named in UTC too: in the device zone it is the evening before west of UTC, so a series
+    /// ending 25 Aug labelled its last day "Aug 24". Real timestamps keep `.current`.
+    public static let dayKeyCalendar: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "UTC")!
+        return c
+    }()
+
     /// The axis used to ask Swift Charts for a COUNT (`.automatic(desiredCount: 5)`) and let it choose the
     /// stride. Over a short window the stride it chooses is sub-day, so more than one mark lands inside a
     /// single calendar day, every one of them formats to the same date, and they print on top of each
@@ -69,10 +81,14 @@ public enum ChartAxisDays {
     /// Declared here rather than spelled at each axis so the three cannot drift into formatting the same
     /// marks differently. That is the whole reason: the ternary also type-checks inline, passed straight
     /// into the generic `AxisValueLabel(format:)`, so this is not working around an inference limit.
+    ///
+    /// Formats in `calendar`'s zone, the one `spanning` chose the days in, so each mark names its own day.
     public static func labelFormat(for marks: [Date], calendar: Calendar = .current) -> Date.FormatStyle {
-        needsYear(marks, calendar: calendar)
+        var style: Date.FormatStyle = needsYear(marks, calendar: calendar)
             ? .dateTime.month(.abbreviated).day().year(.twoDigits)
             : .dateTime.month(.abbreviated).day()
+        style.timeZone = calendar.timeZone
+        return style
     }
 
 }

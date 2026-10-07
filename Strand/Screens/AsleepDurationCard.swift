@@ -67,7 +67,8 @@ struct AsleepDurationCard: View {
                                    showsBars: true,
                                    height: NoopMetrics.chartHeight,
                                    valueFormat: { String(format: "%.1f h", $0) },
-                                   accessibilityLabel: String(localized: "Hours asleep trend"))
+                                   accessibilityLabel: String(localized: "Hours asleep trend"),
+                                   calendar: ChartAxisDays.dayKeyCalendar)
                     } else {
                         Self.sparsePlaceholder
                     }
