@@ -911,7 +911,8 @@ private struct OverlayChart: View {
     var body: some View {
         let model = currentModel
         // Computed once so the marks and their label format agree about which days are shown.
-        let axisDays = ChartAxisDays.spanning(model.plots.map(\.date))
+        // Day keys are UTC midnight (`compareDayParser`), so the days are chosen and named in UTC.
+        let axisDays = ChartAxisDays.spanning(model.plots.map(\.date), calendar: ChartAxisDays.dayKeyCalendar)
         Chart(model.plots) { p in
             LineMark(
                 x: .value("Date", p.date),
@@ -974,7 +975,7 @@ private struct OverlayChart: View {
         .chartXAxis {
             AxisMarks(values: axisDays) { _ in
                 AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
-                AxisValueLabel(format: ChartAxisDays.labelFormat(for: axisDays))
+                AxisValueLabel(format: ChartAxisDays.labelFormat(for: axisDays, calendar: ChartAxisDays.dayKeyCalendar))
                     .foregroundStyle(StrandPalette.textTertiary)
                     .font(StrandFont.footnote)
             }
@@ -1095,6 +1096,9 @@ private struct MultiTooltip: View {
         // parser above still uses en_US_POSIX for stable yyyy-MM-dd parsing. Same pattern + device locale
         // as the Android twin so both localize consistently.
         f.locale = Locale.autoupdatingCurrent
+        // UTC, like `compareDayParser`: the crosshair date is a day key at UTC midnight, which is the
+        // evening before in a zone west of UTC.
+        f.timeZone = ChartAxisDays.dayKeyCalendar.timeZone
         f.dateFormat = "EEE d MMM yyyy"
         return f
     }()

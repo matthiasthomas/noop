@@ -126,7 +126,8 @@ struct HostedTrendCard: View {
                        // would compete with the tap that opens the metric — the same conflict that
                        // keeps the tap-to-log card out of the navigation map. The Trends tab keeps the
                        // scrub; the Today host mirrors only the display, as the hosted Stages card does.
-                       showsHover: false)
+                       showsHover: false,
+                       calendar: ChartAxisDays.dayKeyCalendar)
         }
         .accessibilityElement(children: .combine)
         // The average goes into the spoken label, not just the visible corner. `children: .combine`

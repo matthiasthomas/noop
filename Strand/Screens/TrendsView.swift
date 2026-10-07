@@ -788,7 +788,8 @@ struct TrendsView: View {
                     sparsePlaceholder.frame(height: 120)
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
-                        YearHeatStrip(days: recoveryDays).padding(.vertical, NoopMetrics.space1 / 2)
+                        YearHeatStrip(days: recoveryDays, calendar: ChartAxisDays.dayKeyCalendar)
+                            .padding(.vertical, NoopMetrics.space1 / 2)
                     }
                     Divider().overlay(StrandPalette.hairline)
                     legend
@@ -844,7 +845,8 @@ struct TrendsView: View {
                    showsArea: true,
                    showsBars: TrendChartStyle(rawValue: trendChartStyleRaw) == .bar,
                    height: NoopMetrics.chartHeight, valueFormat: valueFormat,
-                   accessibilityLabel: accessibilityLabel, nowCapColor: tip)
+                   accessibilityLabel: accessibilityLabel, nowCapColor: tip,
+                   calendar: ChartAxisDays.dayKeyCalendar)
     }
 
     private var sparsePlaceholder: some View {

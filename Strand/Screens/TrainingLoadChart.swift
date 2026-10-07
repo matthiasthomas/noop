@@ -49,8 +49,11 @@ struct TrainingLoadChart: View {
 
     private func fmt(_ v: Double) -> String { String(format: "%.1f", v) }
 
+    // UTC, like `TrainingLoadCard.dayParser`: a row's date is its day key at UTC midnight, which is the
+    // evening before in a zone west of UTC.
     private static let tooltipDateFormatter: DateFormatter = {
         let f = DateFormatter()
+        f.timeZone = TimeZone(identifier: "UTC")
         f.dateFormat = "d MMM yyyy"
         return f
     }()

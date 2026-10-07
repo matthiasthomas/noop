@@ -612,7 +612,8 @@ struct StressView: View {
                         height: NoopMetrics.chartHeight,
                         valueFormat: { StressTrace.formatLevel($0) },
                         accessibilityLabel: String(localized: "Stress trend"),
-                        yDomain: 0...yTop
+                        yDomain: 0...yTop,
+                        calendar: ChartAxisDays.dayKeyCalendar
                     )
                 } footer: {
                     ChartFooter([

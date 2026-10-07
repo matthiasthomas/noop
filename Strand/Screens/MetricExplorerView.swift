@@ -1513,12 +1513,13 @@ struct MetricDetailView: View {
                     isStepsDetail
                         ? MetricDetailSteps.periodLabel(
                             day: strandDayParser.string(from: date), resolution: stepsResolution)
-                        : TrendChart.defaultDateString(date)
+                        : TrendChart.defaultDateString(date, timeZone: ChartAxisDays.dayKeyCalendar.timeZone)
                 },
                 accessibilityLabel: stepsAccessibility,
                 yAxisStep: isStepsDetail ? 5000 : nil,
                 showsBarValues: isStepsDetail && (effectiveRange == .week || effectiveRange == .twoWeeks),
-                largeSelection: isStepsDetail
+                largeSelection: isStepsDetail,
+                calendar: ChartAxisDays.dayKeyCalendar
             )
         } footer: {
             // #1662: the VO₂max line is SPLIT on purpose wherever the estimator changes, so two
